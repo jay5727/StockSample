@@ -2,6 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.stocks.assignment">
 
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
     <application
         android:name="com.stocks.assignment.base.BaseApplication"
         android:allowBackup="true"
@@ -11,7 +14,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.StockSample">
         <activity
-            android:name=".MainActivity"
+            android:name=".view.MainActivity"
             android:exported="true"
             android:label="@string/upstox_holding"
             android:theme="@style/Theme.StockSample.NoActionBar">

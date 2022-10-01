@@ -25,8 +25,7 @@
 
 
     <style name="TextViewStyle" parent="Theme.StockSample">
-        <item name="android:textStyle">bold</item>
-        <item name="android:typeface">monospace</item>
+        <item name="android:textStyle">normal</item>
         <item name="android:textSize">@dimen/font_size_16</item>
         <item name="android:textColor">@android:color/black</item>
     </style>

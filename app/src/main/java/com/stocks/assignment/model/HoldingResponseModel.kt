@@ -20,6 +20,6 @@ data class HoldingResponseModel(
     val responseType: String? = null,
 
     @SerializedName("timestamp")
-    val timestamp: Int? = null
+    val timestamp: Long? = null
 
 )
