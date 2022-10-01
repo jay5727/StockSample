@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">StockSample</string>
+    <string name="upstox_holding">Upstox Holding</string>
+</resources>
