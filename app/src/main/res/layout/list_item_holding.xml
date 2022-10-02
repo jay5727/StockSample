@@ -14,6 +14,7 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@color/white"
         android:padding="@dimen/dimen_16dp">
 
         <TextView
@@ -49,7 +50,7 @@
             style="@style/TextViewStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@{String.valueOf(holding.formattedLTP)}"
+            android:text="@{holding.formattedLTP}"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             tools:text="LTP ₹ 100.50" />
@@ -59,7 +60,7 @@
             style="@style/TextViewStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@{String.valueOf(holding.formattedPNL)}"
+            android:text="@{holding.formattedPNL}"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/tv_ltp"
             tools:text="P&amp; L ₹ 42837.50" />

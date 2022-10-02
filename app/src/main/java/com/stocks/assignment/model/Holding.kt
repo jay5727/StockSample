@@ -1,12 +1,6 @@
 package com.stocks.assignment.model
 
 import com.google.gson.annotations.SerializedName
-import com.stocks.assignment.utils.StringConstants.COLON
-import com.stocks.assignment.utils.StringConstants.INRSymbol
-import com.stocks.assignment.utils.StringConstants.LTP
-import com.stocks.assignment.utils.StringConstants.PL
-import com.stocks.assignment.utils.StringConstants.SPACE
-import com.stocks.assignment.utils.orZero
 
 /**
  * Created by Jay on 01-Oct-2022
@@ -64,7 +58,6 @@ data class Holding(
     @SerializedName("withheld_holding_qty")
     var withheldHoldingQty: Int? = null,
 
-
     /**
      * represents Last Traded Price
      */
@@ -74,7 +67,8 @@ data class Holding(
     @SerializedName("close")
     var close: Double? = null,
 
-) {
+    )
+{
     var formattedLTP: String = ""
     var formattedPNL: String = ""
 }

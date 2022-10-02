@@ -3,7 +3,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
-
     <data>
 
         <import type="android.view.View" />
@@ -12,57 +11,81 @@
             name="viewModel"
             type="com.stocks.assignment.viewmodel.HoldingViewModel" />
 
+        <variable
+            name="callback"
+            type="com.stocks.assignment.callback.ErrorCallback" />
+
     </data>
 
-    <androidx.coordinatorlayout.widget.CoordinatorLayout
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".view.MainActivity">
+        android:fillViewport="true">
 
-        <com.google.android.material.appbar.AppBarLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:theme="@style/Theme.StockSample.AppBarOverlay">
+            tools:context=".view.MainActivity">
 
-            <androidx.appcompat.widget.Toolbar
-                android:id="@+id/toolbar"
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_view_holding"
                 android:layout_width="match_parent"
-                android:layout_height="?attr/actionBarSize"
-                android:background="?attr/colorPrimary"
-                app:popupTheme="@style/Theme.StockSample.PopupOverlay" />
+                android:layout_height="@dimen/dimen_0dp"
+                android:background="@color/grey"
+                android:nestedScrollingEnabled="false"
+                android:visibility="@{ viewModel.holdingListVisibility ? View.VISIBLE : View.GONE, default = gone }"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                app:layout_behavior="@string/appbar_scrolling_view_behavior"
+                app:layout_constraintBottom_toTopOf="@+id/recycler_view_pnl_info"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:itemCount="4"
+                tools:listitem="@layout/list_item_holding"
+                tools:visibility="visible" />
 
-        </com.google.android.material.appbar.AppBarLayout>
+            <com.google.android.material.progressindicator.CircularProgressIndicator
+                android:id="@+id/progressBar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:indeterminate="true"
+                android:visibility="@{ viewModel.loaderVisibility ? View.VISIBLE : View.GONE, default = gone }"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:visibility="visible" />
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recycler_view_holding"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:visibility="@{viewModel.loader ? View.GONE : View.VISIBLE , default= gone}"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior"
-            tools:itemCount="4"
-            tools:listitem="@layout/list_item_holding"
-            tools:visibility="visible" />
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_view_pnl_info"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false"
+                android:paddingHorizontal="@dimen/dimen_8dp"
+                android:paddingTop="@dimen/dimen_16dp"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                tools:itemCount="2"
+                tools:listitem="@layout/list_pnl_bottom_info"
+                tools:visibility="visible" />
 
-        <ProgressBar
-            android:id="@+id/progressBar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:visibility="@{viewModel.loader ? View.VISIBLE : View.GONE , default= gone}"
-            tools:visibility="visible" />
+            <!-- ERROR STATE-->
 
+            <include
+                callback="@{ callback }"
+                errorMessage="@{ viewModel.errorMessage}"
+                layout="@layout/widget_error_state"
+                android:visibility="@{ viewModel.errorViewVisible ? View.VISIBLE : View.GONE, default = gone }"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias="0.0"
+                tools:visibility="visible" />
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recycler_view_pnl_info"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
-            android:visibility="@{viewModel.loader ? View.GONE : View.VISIBLE , default= gone}"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-            tools:itemCount="2"
-            tools:listitem="@layout/list_pnl_bottom_info"
-            tools:visibility="visible" />
-
-    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </ScrollView>
 </layout>

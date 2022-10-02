@@ -9,5 +9,6 @@ interface StockService {
      *
      */
     @GET("6d0ad460-f600-47a7-b973-4a779ebbaeaf")
+    //@GET("e3c4d267-ae5a-47a6-9103-50382e79188e")
     suspend fun getHoldingList(): HoldingResponseModel
 }

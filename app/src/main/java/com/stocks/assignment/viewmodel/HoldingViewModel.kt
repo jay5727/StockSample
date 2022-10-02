@@ -1,23 +1,19 @@
 package com.stocks.assignment.viewmodel
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import com.stocks.assignment.model.Holding
+import com.stocks.assignment.model.HoldingResponseModel
 import com.stocks.assignment.repo.StockRepository
-import com.stocks.assignment.utils.Resource
-import com.stocks.assignment.utils.StringConstants
+import com.stocks.assignment.utils.*
 import com.stocks.assignment.utils.StringConstants.CurrentValue
 import com.stocks.assignment.utils.StringConstants.INRSymbol
 import com.stocks.assignment.utils.StringConstants.PNL
 import com.stocks.assignment.utils.StringConstants.TodaysPL
 import com.stocks.assignment.utils.StringConstants.TotalInvestment
-import com.stocks.assignment.utils.getRoundUpto2
-import com.stocks.assignment.utils.orZero
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
+import java.net.*
 import javax.inject.Inject
 
 /**
@@ -28,75 +24,98 @@ class HoldingViewModel @Inject constructor(
     private val repository: StockRepository
 ) : ViewModel() {
 
-    val pairList = arrayListOf<Pair<String, String>>()
-
-    private val holdingList = MutableLiveData<Resource<List<Holding>>>()
-    fun getHoldingList(): LiveData<Resource<List<Holding>>> {
-        return holdingList
+    companion object {
+        private val NoData = "No Data Found"
+        private val NoInternet = "Sorry! Connection failed"
+        private val GenericError = "Something went wrong."
     }
+    val screenState = MutableLiveData<ScreenState>()
+
+    val holdingList: LiveData<List<Holding>?> = screenState.map {
+        (it as? ScreenState.ListSuccessState)?.holdingList
+    }
+
+    val holdingListVisibility: LiveData<Boolean> = holdingList.map {
+        !it.isNullOrEmpty()
+    }
+
+    val errorMessage: LiveData<String?> = screenState.map {
+        (it as? ScreenState.ErrorState)?.message
+    }
+
+    val errorViewVisible: LiveData<Boolean> = screenState.map {
+        (it is ScreenState.ErrorState)
+    }
+
+    val loaderVisibility: LiveData<Boolean> = screenState.map {
+        (it is ScreenState.Loading)
+    }
+
+    val pairList = arrayListOf<Pair<String, String>>()
 
     init {
         fetchHoldingList()
     }
 
-    val loader: LiveData<Boolean> = MutableLiveData(false)
-    fun showLoader(toShow: Boolean) {
-        (loader as MutableLiveData).value = toShow
-    }
-
-    private fun fetchHoldingList() {
+    fun fetchHoldingList() {
         viewModelScope.launch {
-            holdingList.postValue(Resource.loading(null))
+            screenState.value = ScreenState.Loading
             repository.getHoldingList()
-                .catch { e ->
-                    holdingList.postValue(Resource.error(e.toString(), null))
+                .catch { error ->
+                    val message = if (isNoNetworkError(error)) {
+                        NoInternet
+                    } else {
+                        GenericError
+                    }
+                    screenState.value = ScreenState.ErrorState(
+                        message = message
+                    )
                 }
                 .collect { response ->
-                    response.data.map {
-                        it.formattedLTP = getFormattedTextWithRupees(
-                            value = it.ltp,
-                            label = StringConstants.LTP
-                        )
-                        val pnl = getPNL(
-                            ltp = it.ltp,
-                            quantity = it.quantity,
-                            avgPrice = it.avgPrice
-                        )
-                        it.formattedPNL = getFormattedTextWithRupees(
-                            value = pnl,
-                            label = StringConstants.PL
-                        )
-
-                    }
-                    response.apply {
-                        //7
-                        val currentValue = response.data.sumOf {
-                            getCurrentValue(
-                                ltp = it.ltp,
-                                quantity = it.quantity
-                            )
-                        }
-                        //8
-                        val totalInvestment = response.data.sumOf {
-                            getInvestmentValue(
-                                avgPrice = it.avgPrice,
-                                quantity = it.quantity
-                            )
-                        }
-                        //9
-                        val totalPNL = currentValue.orZero() - totalInvestment.orZero()
-                        //10
-                        val todaysPNL = getDayPnL(response.data)
-
-                        setPnLBottomInfo(
-                            currentValue = currentValue,
-                            totalInvestment = totalInvestment,
-                            totalPNL = totalPNL,
-                            todaysPNL = todaysPNL
-                        )
-                    }
-                    holdingList.postValue(Resource.success(response.data))
+                    parseHoldingResponse(response = response)
                 }
+        }
+    }
+
+    private fun parseHoldingResponse(response: HoldingResponseModel) {
+        if (response.data.isNullOrEmpty()) {
+            screenState.postValue(
+                ScreenState.ErrorState(
+                    message = NoData
+                )
+            )
+            return
+        }
+        response.data.map {
+            it.formattedLTP = it.ltp.getFormattedTextWithRupees(label = StringConstants.LTP)
+            it.formattedPNL = it.getPNL().getFormattedTextWithRupees(label = StringConstants.PL)
+        }
+        response.apply {
+
+            //7
+            val currentValue = response.data.sumOf { it.getCurrentValue() }
+
+            //8
+            val totalInvestment = response.data.sumOf { it.getInvestmentValue() }
+
+            //9
+            val totalPNL = currentValue.orZero() - totalInvestment.orZero()
+
+            //10
+            val todaysPNL = getDayPnL(response.data)
+
+            setPnLBottomInfo(
+                currentValue = currentValue,
+                totalInvestment = totalInvestment,
+                totalPNL = totalPNL,
+                todaysPNL = todaysPNL
+            )
+
+            screenState.postValue(
+                ScreenState.ListSuccessState(
+                    holdingList = response.data
+                )
+            )
         }
     }
 
@@ -122,45 +141,31 @@ class HoldingViewModel @Inject constructor(
         )
     }
 
-    private fun getDayPnL(list: List<Holding>): Double {
-        return list.sumOf { (it.close.orZero() - it.ltp.orZero()) * it.quantity.orZero() }
-    }
+    private fun isNoNetworkError(error: Throwable?): Boolean {
+        error?.let {
+            return when (it) {
+                is SocketException,
+                is UnknownHostException,
+                is BindException,
+                is ConnectException,
+                is NoRouteToHostException -> true
 
-    private fun getFormattedTextWithRupees(value: Double?, label: String): String {
-        return if (value != null) {
-            StringBuilder()
-                .append(label)
-                .append(StringConstants.COLON)
-                .append(StringConstants.SPACE)
-                .append(INRSymbol).append(value).toString()
-        } else {
-            ""
+                else -> false
+            }
         }
+
+        return false
     }
 
-    /**
-     * Function to get the data of every individual item
-     */
-    private fun getPNL(
-        ltp: Double? = null,
-        quantity: Int? = null,
-        avgPrice: String? = null
-    ): Double {
-        //5
-        val currentValue: Double = getCurrentValue(ltp = ltp, quantity = quantity)
-        //6
-        val investmentValue: Double = getInvestmentValue(avgPrice = avgPrice, quantity = quantity)
-        //4
-        return (currentValue - investmentValue).getRoundUpto2()
+    sealed class ScreenState {
+        object Loading : ScreenState()
+
+        data class ListSuccessState(
+            val holdingList: List<Holding>?
+        ) : ScreenState()
+
+        data class ErrorState(
+            val message: String?
+        ) : ScreenState()
     }
-
-    private fun getCurrentValue(
-        ltp: Double? = null,
-        quantity: Int? = null
-    ) = ltp.orZero() * quantity.orZero()
-
-    private fun getInvestmentValue(
-        quantity: Int? = null,
-        avgPrice: String? = null
-    ) = avgPrice?.toDoubleOrNull().orZero() * quantity.orZero()
 }

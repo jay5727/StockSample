@@ -14,16 +14,6 @@
         <!-- Customize your theme here. -->
     </style>
 
-    <style name="Theme.StockSample.NoActionBar">
-        <item name="windowActionBar">false</item>
-        <item name="windowNoTitle">true</item>
-    </style>
-
-    <style name="Theme.StockSample.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
-
-    <style name="Theme.StockSample.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
-
-
     <style name="TextViewStyle" parent="Theme.StockSample">
         <item name="android:textStyle">normal</item>
         <item name="android:textSize">@dimen/font_size_16</item>

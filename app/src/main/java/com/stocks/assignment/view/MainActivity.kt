@@ -2,75 +2,59 @@ package com.stocks.assignment.view
 
 import android.os.Bundle
 import androidx.activity.viewModels
-import androidx.recyclerview.widget.DividerItemDecoration
-import androidx.recyclerview.widget.LinearLayoutManager
 import com.stocks.assignment.adapter.HoldingAdapter
 import com.stocks.assignment.adapter.PnlBottomInfoAdapter
 import com.stocks.assignment.base.BaseActivity
+import com.stocks.assignment.callback.ErrorCallback
 import com.stocks.assignment.databinding.ActivityMainBinding
-import com.stocks.assignment.utils.Status
+import com.stocks.assignment.utils.addItemDecorationWithoutLastDivider
 import com.stocks.assignment.viewmodel.HoldingViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class MainActivity : BaseActivity() {
+class MainActivity : BaseActivity(), ErrorCallback {
 
     private lateinit var binding: ActivityMainBinding
-
-    // Get a reference to the ViewModel scoped to this Fragment
-    private val viewModel by viewModels<HoldingViewModel>()
+    private val viewModel: HoldingViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        setSupportActionBar(binding.toolbar)
+        binding.callback= this
+        binding.lifecycleOwner = this
         binding.viewModel = viewModel
         setupObserver()
     }
 
+    override fun onRetryClicked() {
+        viewModel.fetchHoldingList()
+    }
+
     private fun setupObserver() {
-        viewModel.getHoldingList().observe(this) {
-            when (it.status) {
-                Status.SUCCESS -> {
-                    viewModel.showLoader(false)
-
+        viewModel.screenState.observe(this) {
+            when (it) {
+                is HoldingViewModel.ScreenState.ListSuccessState -> {
                     binding.run {
-                        recyclerViewHolding.apply {
-                            addItemDecoration(
-                                DividerItemDecoration(
-                                    this.context,
-                                    (this.layoutManager as LinearLayoutManager).orientation
-                                )
-                            )
-                            if (!it.data.isNullOrEmpty()) {
-                                adapter = HoldingAdapter(it.data)
-                                setHasFixedSize(true)
-                            } else {
-                                //no data UI
-                            }
 
-                        }
-                        recyclerViewPnlInfo.apply {
-                            if (!it.data.isNullOrEmpty()) {
-                                adapter = PnlBottomInfoAdapter(
-                                    binding.viewModel?.pairList ?: emptyList()
-                                )
-                                setHasFixedSize(true)
-                            } else {
-                                //no data UI
-                            }
+                        if (!it.holdingList.isNullOrEmpty()) {
+                            recyclerViewHolding.adapter = HoldingAdapter(
+                                holdingList =  it.holdingList
+                            )
+                            //We don't need seperator for last item
+                            recyclerViewHolding.addItemDecorationWithoutLastDivider()
+                            recyclerViewHolding.setHasFixedSize(true)
+
+                            //P&L Info Bottom Info
+                            recyclerViewPnlInfo.adapter = PnlBottomInfoAdapter(
+                                pairList = binding.viewModel?.pairList ?: emptyList()
+                            )
+                            recyclerViewPnlInfo.setHasFixedSize(true)
                         }
                     }
-                }
-                Status.LOADING -> {
-                    viewModel.showLoader(true)
-                }
-                Status.ERROR -> {
-                    viewModel.showLoader(false)
-                    //Handle Error
                 }
             }
         }
     }
+
 }
