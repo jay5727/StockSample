@@ -32,21 +32,17 @@ fun Holding?.getPNL(): Double {
     //6
     val investmentValue: Double = this?.getInvestmentValue().orZero()
     //4
-    return (currentValue - investmentValue).getRoundUpto2Decimals().toDouble()
+    return (currentValue - investmentValue).getRoundUpto2Decimals()
 }
 
 fun Holding?.getCurrentValue(
-): Double {
-    return this?.ltp.orZero() * this?.quantity.orZero()
-}
+): Double = this?.ltp.orZero() * this?.quantity.orZero()
 
 /**
  * Correction: 6 It is AvgPrice * Qty not AvgPrice - Qty
  */
 fun Holding?.getInvestmentValue(
-): Double {
-    return this?.avgPrice?.toDoubleOrNull().orZero() * this?.quantity.orZero()
-}
+): Double = this?.avgPrice?.toDoubleOrNull().orZero() * this?.quantity.orZero()
 
 fun getDayPnL(list: List<Holding>): Double {
     return list.sumOf { (it.close.orZero() - it.ltp.orZero()) * it.quantity.orZero() }

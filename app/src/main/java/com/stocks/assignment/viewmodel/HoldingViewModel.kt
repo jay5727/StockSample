@@ -11,6 +11,7 @@ import com.stocks.assignment.utils.StringConstants.PNL
 import com.stocks.assignment.utils.StringConstants.TodaysPL
 import com.stocks.assignment.utils.StringConstants.TotalInvestment
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import java.net.*
@@ -31,7 +32,7 @@ class HoldingViewModel @Inject constructor(
     }
     val screenState = MutableLiveData<ScreenState>()
 
-    val holdingList: LiveData<List<Holding>?> = screenState.map {
+    private val holdingList: LiveData<List<Holding>?> = screenState.map {
         (it as? ScreenState.ListSuccessState)?.holdingList
     }
 
@@ -58,17 +59,19 @@ class HoldingViewModel @Inject constructor(
     }
 
     fun fetchHoldingList() {
-        viewModelScope.launch {
-            screenState.value = ScreenState.Loading
-            repository.getHoldingList()
+        viewModelScope.launch(Dispatchers.IO) {
+            screenState.postValue(ScreenState.Loading)
+            repository.getHoldingResponse()
                 .catch { error ->
                     val message = if (isNoNetworkError(error)) {
                         NoInternet
                     } else {
                         GenericError
                     }
-                    screenState.value = ScreenState.ErrorState(
-                        message = message
+                    screenState.postValue(
+                        ScreenState.ErrorState(
+                            message = message
+                        )
                     )
                 }
                 .collect { response ->
@@ -92,17 +95,18 @@ class HoldingViewModel @Inject constructor(
         }
         response.apply {
 
+            val holdingList = response.data
             //7
-            val currentValue = response.data.sumOf { it.getCurrentValue() }
+            val currentValue = holdingList.sumOf { it.getCurrentValue() }
 
             //8
-            val totalInvestment = response.data.sumOf { it.getInvestmentValue() }
+            val totalInvestment = holdingList.sumOf { it.getInvestmentValue() }
 
             //9
             val totalPNL = currentValue.orZero() - totalInvestment.orZero()
 
             //10
-            val todaysPNL = getDayPnL(response.data)
+            val todaysPNL = getDayPnL(holdingList)
 
             setPnLBottomInfo(
                 currentValue = currentValue,
@@ -129,9 +133,13 @@ class HoldingViewModel @Inject constructor(
         addToPairs(TotalInvestment, totalInvestment.toString())
         addToPairs(TodaysPL, todaysPNL.toString())
         addToPairs(PNL, totalPNL.toString())
-
     }
 
+    /**
+     * @param label: label to display
+     * @param amount: value to display
+     *
+     */
     private fun addToPairs(label: String, amount: String) {
         pairList.add(
             Pair(
@@ -168,4 +176,5 @@ class HoldingViewModel @Inject constructor(
             val message: String?
         ) : ScreenState()
     }
+
 }

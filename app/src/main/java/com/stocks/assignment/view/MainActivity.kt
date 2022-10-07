@@ -1,6 +1,7 @@
 package com.stocks.assignment.view
 
 import android.os.Bundle
+import android.view.View
 import androidx.activity.viewModels
 import com.stocks.assignment.adapter.HoldingAdapter
 import com.stocks.assignment.adapter.PnlBottomInfoAdapter
@@ -21,14 +22,18 @@ class MainActivity : BaseActivity(), ErrorCallback {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        binding.callback= this
-        binding.lifecycleOwner = this
-        binding.viewModel = viewModel
+        setupBinding()
         setupObserver()
     }
 
     override fun onRetryClicked() {
         viewModel.fetchHoldingList()
+    }
+
+    private fun setupBinding() {
+        binding.callback = this
+        binding.lifecycleOwner = this
+        binding.viewModel = viewModel
     }
 
     private fun setupObserver() {
@@ -38,20 +43,32 @@ class MainActivity : BaseActivity(), ErrorCallback {
                     binding.run {
 
                         if (!it.holdingList.isNullOrEmpty()) {
-                            recyclerViewHolding.adapter = HoldingAdapter(
-                                holdingList =  it.holdingList
-                            )
-                            //We don't need seperator for last item
-                            recyclerViewHolding.addItemDecorationWithoutLastDivider()
-                            recyclerViewHolding.setHasFixedSize(true)
+
+                            with(recyclerViewHolding) {
+                                adapter = HoldingAdapter(
+                                    holdingList = it.holdingList
+                                )
+                                //We don't need seperator for last item
+                                addItemDecorationWithoutLastDivider()
+                                setHasFixedSize(true)
+                            }
 
                             //P&L Info Bottom Info
-                            recyclerViewPnlInfo.adapter = PnlBottomInfoAdapter(
+                            PnlBottomInfoAdapter(
                                 pairList = binding.viewModel?.pairList ?: emptyList()
-                            )
-                            recyclerViewPnlInfo.setHasFixedSize(true)
+                            ).also { adapter ->
+                                recyclerViewPnlInfo.apply {
+                                    this.adapter = adapter
+                                    visibility = View.VISIBLE
+                                    setHasFixedSize(true)
+                                }
+                            }
+
                         }
                     }
+                }
+                else -> {
+                    // no - op
                 }
             }
         }

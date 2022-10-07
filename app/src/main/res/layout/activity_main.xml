@@ -63,6 +63,7 @@
                 android:nestedScrollingEnabled="false"
                 android:paddingHorizontal="@dimen/dimen_8dp"
                 android:paddingTop="@dimen/dimen_16dp"
+                android:visibility="gone"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"

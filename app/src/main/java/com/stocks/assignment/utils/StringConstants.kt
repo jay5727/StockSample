@@ -2,13 +2,13 @@ package com.stocks.assignment.utils
 
 object StringConstants {
 
-    val INRSymbol = "₹"
-    val PL = "P&L"
-    val LTP = "LTP"
-    val CurrentValue = "Current Value:"
-    val TotalInvestment = "Total Investment:"
-    val PNL = "Profit & Loss:"
-    val TodaysPL = "Today's $PNL"
-    val COLON = ":"
-    val SPACE = " "
+    const val INRSymbol = "₹"
+    const val PL = "P&L"
+    const val LTP = "LTP"
+    const val CurrentValue = "Current Value:"
+    const val TotalInvestment = "Total Investment:"
+    const val PNL = "Profit & Loss:"
+    const val TodaysPL = "Today's $PNL"
+    const val COLON = ":"
+    const val SPACE = " "
 }

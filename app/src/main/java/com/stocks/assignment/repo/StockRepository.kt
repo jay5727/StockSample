@@ -12,5 +12,7 @@ class StockRepository @Inject constructor(
     private val stockService: StockService
 ) {
 
-    fun getHoldingList(): Flow<HoldingResponseModel> = flow { emit(stockService.getHoldingList()) }
+    fun getHoldingResponse(): Flow<HoldingResponseModel> = flow {
+        emit(stockService.getHoldingList())
+    }
 }
